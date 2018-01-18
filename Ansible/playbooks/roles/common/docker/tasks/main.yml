@@ -1,0 +1,63 @@
+---
+- name: add docker repository.
+  yum_repository:
+    name: docker-ce-stable
+    description: Docker Repository
+    enabled: yes
+    file: docker-ce
+    baseurl: "{{ docker_repo_baseurl}}"
+    gpgcheck: yes
+    gpgkey: "{{docker_repo_pgp_keys}}"
+#    proxy:
+
+- name: install docker engine.
+  yum: 
+    name: "{{ item }}" 
+    state: installed 
+    update_cache: yes
+  with_items:
+  - docker-ce-{{ docker_version }}
+  async: 300
+  poll: 3
+
+- name: create docker engine config dir
+  file: path={{ docker_conf_dir }} state=directory mode=0755
+
+- name: add docker engine config file
+  template: src=docker.conf.j2 dest={{ docker_conf_dir }}/docker.conf mode=0755
+  notify:
+  - restart docker
+
+- name: add docker engine config file
+  template: src=daemon.json.j2 dest=/etc/docker/daemon.json
+  notify:
+  - restart docker
+
+# - name: add docker engine config file
+#   template: src=http-proxy.conf.j2 dest={{ docker_conf_dir }}/{{ docker_http_conf_file_name }}
+#   notify:
+#   - restart docker
+
+- meta: flush_handlers
+
+- name: start docker
+  service: name=docker state=started enabled=yes
+
+- name: load docker info as facts
+  docker_info_facts:
+
+- debug:
+    msg: "current docker drive {{ docker_info.Driver }}"
+
+- name: make sure docker is using overlay driver
+  assert:
+    that:
+      - " docker_info.Driver == 'overlay' "
+
+- name: Log into private registry
+  docker_login:
+    registry: "{{ docker_repo_host }}"
+    username: "{{ docker_user }}"
+    password: "{{ docker_password }}"
+
+

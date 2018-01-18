@@ -1,0 +1,171 @@
+version: '3.2'
+
+services:
+  dockerd_export:
+    image: stefanprodan/caddy
+    networks:
+      - monitoring-overlay
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    volumes:
+      - {{ docker_runtime_root_dir }}/Caddyfile_exporter:/etc/caddy/Caddyfile
+  node_export:
+    image: stefanprodan/swarmprom-node-exporter
+    networks:
+      - monitoring-overlay
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    environment:
+      - NODE_ID={{ '{{' }}.Node.ID{{ '}}' }}
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /etc/hostname:/etc/nodename
+    command:
+      - '-collector.textfile.directory=/etc/node-exporter/'
+      - '-collector.procfs=/host/proc'
+      - '-collector.sysfs=/host/sys'
+      - '-collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+      - '-collectors.enabled=textfile,conntrack,diskstats,entropy,filefd,filesystem,loadavg,mdadm,meminfo,netdev,netstat,stat,time,vmstat'
+  cadvisor:
+    image: google/cadvisor:latest
+    networks:
+      - monitoring-overlay
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - {{ docker_runtime_root_dir }}:/var/lib/docker:ro
+    command: -logtostderr -docker_only
+  prometheus:
+    image: prom/prometheus
+    networks:
+      - monitoring-overlay
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints:
+          - node.labels.env == prometheus
+    volumes:
+      - /opt/prometheus/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - /opt/prometheus/prometheus/alert.rules:/etc/prometheus/alert.rules
+      - /opt/prometheus/prometheus/swarm_node.rules:/etc/prometheus/swarm_node.rules
+      - /opt/prometheus/prometheus/swarm_task.rules:/etc/prometheus/swarm_task.rules
+    command:
+      - '-config.file=/etc/prometheus/prometheus.yml'
+      - '-storage.local.target-heap-size=1073741824'
+      - '-storage.local.retention=24h'
+      - '-alertmanager.url=http://alertmanager:9093'
+  grafana:
+    image: grafana/grafana
+    networks:
+      - monitoring-overlay
+    depends_on:
+      - prometheus
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints:
+          - node.labels.env == prometheus
+    env_file:
+      - {{ docker_runtime_root_dir }}/grafana.config
+    volumes:
+      - /opt/prometheus/grafana:/var/lib/grafana
+  alertmanager:
+    image: prom/alertmanager
+    networks:
+      - monitoring-overlay
+    depends_on:
+      - prometheus
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints:
+          - node.labels.env == prometheus
+    volumes:
+      - /opt/prometheus/alertmanager:/etc/alertmanager
+    command:
+      - '-config.file=/etc/alertmanager/config.yml'
+      - '-storage.path=/alertmanager'
+  unsee:
+    image: cloudflare/unsee
+    networks:
+      - monitoring-overlay
+    environment:
+      - "ALERTMANAGER_URIS=default:http://alertmanager:9093"
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints:
+          - node.labels.env == prometheus
+  caddy:
+    image: stefanprodan/caddy
+    depends_on:
+      - prometheus
+    ports:
+      - "3000:3000"
+      - "9090:9090"
+      - "9093:9093"
+      - "9094:9094"
+    networks:
+      - monitoring-overlay
+    volumes:
+      - {{ docker_runtime_root_dir }}/Caddyfile_proxy:/etc/caddy/Caddyfile
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints:
+          - node.labels.env == prometheus
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 5s
+      timeout: 1s
+      retries: 5
+
+networks:  
+  monitoring-overlay:
+    external: true

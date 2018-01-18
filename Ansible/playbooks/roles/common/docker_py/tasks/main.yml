@@ -1,0 +1,11 @@
+---
+- name: install docekr-py
+  yum:
+    name: "{{ item }}"
+    update_cache: yes
+    enablerepo: rhel*
+  async: 300
+  poll: 3
+  with_items:
+    - python-docker-py
+    - yum-utils

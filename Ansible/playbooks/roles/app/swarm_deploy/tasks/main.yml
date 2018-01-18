@@ -1,0 +1,22 @@
+---
+
+- name: check if monitoring network exists
+  command: docker network inspect monitoring-overlay
+  register: monitoring_exists
+  ignore_errors: True
+  run_once: true
+
+- name: create monitoring overlay network
+  command: docker network create --driver=overlay --attachable monitoring-overlay
+  when: "'Error' in monitoring_exists.stderr"
+  run_once: true
+
+- file:
+    path: "{{ docker_runtime_root_dir }}/{{ item }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - scripts
+
+- include_tasks: portainer.yml
+- include_tasks: monitoring.yml

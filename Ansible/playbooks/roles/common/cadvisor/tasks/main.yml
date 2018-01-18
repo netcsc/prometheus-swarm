@@ -1,0 +1,15 @@
+---
+
+- name: start cadvisor container
+  docker_container:
+    image: google/cadvisor:latest
+    name: cadvisor
+    pull: yes
+    restart_policy: unless-stopped
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    published_ports:
+      - 8088:8080

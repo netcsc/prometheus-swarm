@@ -1,0 +1,7 @@
+---
+
+- name: add caddy config file for caddy
+  template: src=Caddyfile_exporter.j2 dest={{ docker_runtime_root_dir }}/Caddyfile_exporter mode=0755
+
+- name: add caddy config file for dockerd exporter
+  template: src=Caddyfile_proxy.j2 dest={{ docker_runtime_root_dir }}/Caddyfile_proxy mode=0755

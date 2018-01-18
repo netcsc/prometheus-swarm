@@ -1,0 +1,73 @@
+---
+
+- hosts: "swarm_{{env_name}}"
+  become: true
+  gather_facts: True
+  roles:
+  - role: base
+  - role: docker
+
+- hosts: "swarm_{{env_name}}"
+  become: true
+  gather_facts: True
+  roles:
+    - role: docker_compose
+
+# determine the status of each manager node and break them
+# into two groups:
+#   - swarm_manager_operational (swarm is running and active)
+#   - swarm_manager_bootstrap (host needs to be joined to the cluster)
+- hosts: "managers_{{env_name}}"
+  become: true
+  gather_facts: True
+  roles:
+    - role: manager
+
+# determine the status of each worker node and break them
+# into two groups:
+#   - swarm_worker_operational (host is joined to the swarm cluster)
+#   - swarm_worker_bootstrap (host needs to be joined to the cluster)
+- hosts: "workers_{{env_name}}"
+  become: true
+  gather_facts: True
+  roles:
+    - role: worker
+
+# when the swarm_manager_operational group is empty, meaning there
+# are no hosts running swarm, we need to initialize one of the hosts
+# then add it to the swarm_manager_operational group
+- hosts: swarm_manager_bootstrap[0]
+  become: true
+  gather_facts: True
+  roles:
+    - role: manager_bootstrap
+
+# retrieve the swarm tokens and populate a list of ips listening on
+# the swarm port 2377
+- hosts: swarm_manager_operational[0]
+  become: true
+  gather_facts: True
+  roles:
+    - role: manager_token
+
+# join the hosts not yet initialized to the swarm cluster
+- hosts: swarm_manager_bootstrap:!swarm_manager_operational
+  become: true
+  gather_facts: True
+  roles:
+    - role: manager_join
+
+# join the remaining workers to the swarm cluster
+- hosts: swarm_worker_bootstrap
+  become: true
+  gather_facts: True
+  roles:
+    - role: worker_join
+    
+# tag each nodes within swarm cluster
+- hosts: "managers_{{env_name}}[0]"
+  become: true
+  gather_facts: True
+  roles:
+    - { role: swarm_label, app_label: "prometheus" }
+    - { role: swarm_label, app_label: "zookeeper" }

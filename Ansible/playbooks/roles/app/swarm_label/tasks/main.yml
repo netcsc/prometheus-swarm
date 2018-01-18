@@ -1,0 +1,20 @@
+---
+
+- name: load docker info as facts
+  docker_info_facts:
+
+- name: find group name from passing app_label and env_name
+  shell: "echo {{ app_label }}_{{ env_name }}"
+  register: group_name
+
+- name: create swarm label for each node
+  shell: >
+    docker node update --label-add env={{ app_label }} {{item.split('.')[0]}}
+  with_items: "{{ groups[group_name.stdout] }}"
+#  when: app_label != "zookeeper"
+
+#- name: create swarm label for zookeeper node
+#  shell: >
+#    docker node update --label-add zookeeper=zookeeper{{item.0 + 1}} {{item.1.split('.')[0]}}
+#  with_indexed_items: "{{ groups[group_name.stdout] }}"
+#  when: app_label == "zookeeper"

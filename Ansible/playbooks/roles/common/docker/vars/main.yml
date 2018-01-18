@@ -1,0 +1,10 @@
+docker_http_proxy: 
+docker_no_proxy: 
+docker_conf_dir: /etc/systemd/system/docker.service.d
+docker_repo_certs_dir: /etc/docker/certs.d/af.cds.bns:5002
+docker_http_conf_file_name: http-proxy.conf
+
+docker_repo_baseurl: https://download.docker.com/linux/centos/7/$basearch/stable
+docker_repo_pgp_keys: https://download.docker.com/linux/centos/gpg
+
+docker_version: 17.09.0.ce-1.el7.centos

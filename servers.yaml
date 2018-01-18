@@ -1,0 +1,39 @@
+---
+# base image, DO NOT CHANGE
+- name: base
+  box: centos/7
+  ram: 512
+  cpus: 1
+  ip: 192.168.3.9
+  shell_path: VagrantProvision/provision_centos7.sh
+
+# grid-manager group
+- name: swarm-manager1
+  box: file://Boxes/centos7.box
+  ram: 2048
+  cpus: 2
+  ip: 192.168.3.21
+  shell_path: VagrantProvision/start_vm.sh
+
+- name:  swarm-worker1
+  box: file://Boxes/centos7.box
+  ram: 2048
+  cpus: 2
+  ip: 192.168.3.22
+  shell_path: VagrantProvision/start_vm.sh
+
+- name:  swarm-worker2
+  box: file://Boxes/centos7.box
+  ram: 2048
+  cpus: 2
+  ip: 192.168.3.23
+  shell_path: VagrantProvision/start_vm.sh
+
+# Local dev
+- name: dev
+  box: file://Boxes/centos7.box
+  ram: 2048
+  cpus: 2
+  ip: 192.168.3.30
+  shell_path: VagrantProvision/start_vm.sh
+...

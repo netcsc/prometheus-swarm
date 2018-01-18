@@ -1,0 +1,6 @@
+Boxes/*
+sym/*
+.vagrant
+**/*.retry
+**/.DS_Store
+**/*.pyc

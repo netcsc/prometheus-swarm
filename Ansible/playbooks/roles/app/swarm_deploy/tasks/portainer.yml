@@ -1,0 +1,22 @@
+---
+
+#- name: start docker portainer
+#  shell: >
+#    docker pull portainer/portainer:latest && docker service create --name portainer --publish 9000:9000 --replicas=1 --constraint 'node.role == manager' --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock portainer/portainer:latest -H unix:///var/run/docker.sock
+#  run_once: true
+#  tags: portainer
+
+- name: copy over portainer.yml
+  template:
+    src: portainer.yml.j2
+    dest: "{{ docker_runtime_root_dir }}/scripts/portainer.yml"
+    owner: root
+    group: root
+    mode: 0755
+  tags: portainer
+
+- name: start docker stack for portainer
+  shell: >
+    docker login -u {{ docker_user }} -p {{ docker_password }} {{ docker_repo_host }} && docker stack deploy -c {{ docker_runtime_root_dir }}/scripts/portainer.yml portainer --with-registry-auth
+  run_once: true
+  tags: portainer

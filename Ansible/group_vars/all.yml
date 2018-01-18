@@ -1,0 +1,12 @@
+---
+
+# docker private repo
+docker_repo_host: 
+docker_user: 
+docker_password: 
+
+# swarm interface:
+swarm_iface: eth1
+
+# docker metrics port
+docker_metrics_addr: 9323

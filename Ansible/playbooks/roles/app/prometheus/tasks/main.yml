@@ -1,0 +1,31 @@
+---
+
+- name: create prometheus dir
+  file:
+    path: "/opt/prometheus"
+    state: directory
+    mode: 0755
+
+- name: create alertmanager dir
+  file:
+    path: "/opt/prometheus/alertmanager"
+    state: directory
+    mode: 0755
+
+- name: create prometheus dir
+  file:
+    path: "/opt/prometheus/prometheus"
+    state: directory
+    mode: 0755
+
+- name: create grafana dir
+  file:
+    path: "/opt/prometheus/grafana"
+    state: directory
+    mode: 0755
+
+- name: copy over alert manager dir
+  copy: src=alertmanager dest=/opt/prometheus mode=0755 directory_mode=yes
+
+- name: copy over prometheus dir
+  copy: src=prometheus dest=/opt/prometheus mode=0755 directory_mode=yes

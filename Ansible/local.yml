@@ -1,0 +1,19 @@
+---
+
+- hosts: swarm
+  become: True
+  gather_facts: True
+  roles:
+    - role: caddy
+
+- hosts: prometheus
+  become: True
+  gather_facts: True
+  roles:
+    - role: prometheus
+
+- hosts: managers
+  become: True
+  gather_facts: True
+  roles:
+    - role: swarm_deploy

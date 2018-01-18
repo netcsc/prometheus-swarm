@@ -1,0 +1,20 @@
+
+#zookeeper_group: "{{ groups.zookeeper }}"
+#zookeeper_host_list: "{{ groups.zookeeper | join(\":{0};\".format(zk_peer_ports)) }}:{{ zk_peer_ports }}"
+zk_client_port: 2181
+zk_peer_port_leader: 2888
+zk_peer_port_follower: 3888
+#zk_peer_ports: "{{ zk_peer_port_leader }}:{{ zk_peer_port_follower }}"
+zk_loadbalancer: 
+zk_kerberos_enabled: "false"
+
+# Docker runtime root dir
+docker_runtime_root_dir: "/app"
+
+
+env: 
+
+# caddy authentication
+CADDY_ADMIN_USER: 
+CADDY_ADMIN_PASSWORD: 
+DOCKER_GWBRIDGE_IP: 172.18.0.1
