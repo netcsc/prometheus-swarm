@@ -120,6 +120,7 @@ services:
       - /opt/prometheus/alertmanager:/etc/alertmanager
     command:
       - '-config.file=/etc/alertmanager/config.yml'
+      - "-web.external-url=http://{{ inventory_hostname }}:9093/"
       - '-storage.path=/alertmanager'
   unsee:
     image: cloudflare/unsee
