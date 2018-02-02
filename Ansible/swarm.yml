@@ -69,5 +69,5 @@
   become: true
   gather_facts: True
   roles:
-    - { role: swarm_label, app_label: "prometheus" }
-    - { role: swarm_label, app_label: "zookeeper" }
+    - { role: swarm_label, app_label: "prometheus", enabled: "{{ prometheus_enabled }}"}
+    - { role: swarm_label, app_label: "zookeeper", enabled: "{{ zookeeper_enabled }}" }
